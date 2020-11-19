@@ -5,7 +5,6 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ArcGISPlugin = require("@arcgis/webpack-plugin");
-const DojoWebpackPlugin = require('dojo-webpack-plugin');
 
 module.exports = (env) => {
     if (!env) env = {};
@@ -25,10 +24,20 @@ module.exports = (env) => {
         devServer: {
             host: "0.0.0.0",
             contentBase: path.join(__dirname),
-            headers: {'Access-Control-Allow-Origin': '*'},
             port: 80,
             historyApiFallback: true,
-            proxy: {}
+            proxy: {
+                '/service': {
+                    target: 'http://rp5gis.myxomopx.ru',
+                    secure: false,
+                    changeOrigin: true,
+                }
+            },
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+                "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+            }
         },
         entry: {
             index: './src/index.tsx',
@@ -47,9 +56,37 @@ module.exports = (env) => {
         },
         module: {
             rules: [
+                {
+                    test: /\.js$/,
+                    exclude: /node_modules/,
+                    include: path.resolve(__dirname, "src"),
+                    use: [
+                        "cache-loader",
+                        {
+                            loader: "babel-loader",
+                            options: {
+                                cacheDirectory: true
+                            }
+                        }
+                    ]
+                },
+                {
+                    test: /\.(jpe?g|png|gif|webp)$/,
+                    use: [
+                        "cache-loader",
+                        {
+                            loader: "url-loader",
+                            options: {
+                                // Inline files smaller than 10 kB (10240 bytes)
+                                limit: 10 * 1024,
+                            }
+                        }
+                    ]
+                },
                 // Правило для .ts .tsx
                 {
                     test: /\.tsx?$/,
+                    exclude: ["/node_modules"],
                     loader: 'awesome-typescript-loader'
                 },
                 // Правило подгрузки sass, scss, css

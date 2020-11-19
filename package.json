@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "startDev": "webpack-dev-server --env.sw=false",
+    "startDevHighSpaceLimit": "node --max-old-space-size=1024 node_modules/webpack-dev-server/bin/webpack-dev-server.js --env.sw=false",
     "startProd": "webpack-dev-server --env.production=true",
     "prepare": "npm run build",
     "buildDev": "webpack --mode development",
@@ -37,9 +38,9 @@
     "sass-loader": "^8.0.2",
     "string-replace-loader": "^2.3.0",
     "typescript": "^3.8.3",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3"
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
     "@uirouter/react": "^1.0.3",

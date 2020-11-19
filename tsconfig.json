@@ -3,7 +3,7 @@
     "sourceMap": true,
     "noImplicitAny": false,
     "module": "commonjs",
-    "target": "es6",
+    "target": "amd",
     "resolveJsonModule": true,
     "lib": [
       "es2019",
@@ -21,8 +21,7 @@
     "allowJs": true,
     "baseUrl": "./",
     "types": [
-      "arcgis-js-api",
-      "moment"
+      "arcgis-js-api"
     ],
     "paths": {
       "components/*": [
