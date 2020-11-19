@@ -4,23 +4,13 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const ArcGISPlugin = require("@arcgis/webpack-plugin");
 
 module.exports = (env) => {
-    if (!env) env = {};
-    const PRODUCTION = env.production === undefined ? false : env.production;
-    const SW_ENABLED = env.sw === undefined ? true : env.sw;
 
-    const API_URL = PRODUCTION ? "/api" : "http://192.168.1.25:5181"
-
-    const REPLACEMENTS = [
-        {search: '\\$WEBPACK_API_ADDRESS', replace:API_URL, flags: "g"},
-        {search: '\\$WEBPACK_ENABLE_SW', replace:String(SW_ENABLED), flags: "g"},
-    ];
 
     return {
         devtool: 'source-map',
-        mode: PRODUCTION ? 'production' : 'development',
+        mode: 'development',
         devServer: {
             host: "0.0.0.0",
             contentBase: path.join(__dirname),
@@ -56,33 +46,6 @@ module.exports = (env) => {
         },
         module: {
             rules: [
-                {
-                    test: /\.js$/,
-                    exclude: /node_modules/,
-                    include: path.resolve(__dirname, "src"),
-                    use: [
-                        "cache-loader",
-                        {
-                            loader: "babel-loader",
-                            options: {
-                                cacheDirectory: true
-                            }
-                        }
-                    ]
-                },
-                {
-                    test: /\.(jpe?g|png|gif|webp)$/,
-                    use: [
-                        "cache-loader",
-                        {
-                            loader: "url-loader",
-                            options: {
-                                // Inline files smaller than 10 kB (10240 bytes)
-                                limit: 10 * 1024,
-                            }
-                        }
-                    ]
-                },
                 // Правило для .ts .tsx
                 {
                     test: /\.tsx?$/,
@@ -102,15 +65,6 @@ module.exports = (env) => {
                         'css-loader',
                         'sass-loader'
                     ]
-                },
-                // Правило подставки $WEBPACK: переменных
-                {
-                    test: /(\.(sa|sc|c)ss|\.[tj]sx?)$/,
-                    exclude: /node_modules/,
-                    loader: 'string-replace-loader',
-                    options: {
-                        multiple: REPLACEMENTS
-                    }
                 }
             ]
         },
@@ -140,12 +94,6 @@ module.exports = (env) => {
                 tags: [
                     {type: "css", path: "./css/antd.min.css"}
                 ]
-            }),
-            new ArcGISPlugin({
-                features: {
-                    "3d": false
-                },
-                locales: ["ru"]
             })
         ]
     };
