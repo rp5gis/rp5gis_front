@@ -1,35 +1,25 @@
 {
+  "exclude": [
+    "./node_modules/*"
+  ],
   "compilerOptions": {
     "sourceMap": true,
     "noImplicitAny": false,
-    "module": "commonjs",
-    "target": "amd",
+    "moduleResolution": "Node",
+    "module": "ESNext",
+    "target": "es6",
     "resolveJsonModule": true,
     "lib": [
       "es2019",
       "es2015",
       "es2017",
-      "dom",
-      "dom",
-      "es2015.promise",
-      "es5",
-      "es6"
+      "dom"
     ],
     "removeComments": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "jsx": "react",
     "allowJs": true,
-    "baseUrl": "./",
-    "types": [
-      "arcgis-js-api"
-    ],
-    "paths": {
-      "components/*": [
-        "src/components/*"
-      ],
-      "i18next-intervalplural-postprocessor": [
-        "src/typings/i18next-intervalplural-postprocessor.d.ts"
-      ]
-    }
+    "baseUrl": "./"
   }
 }

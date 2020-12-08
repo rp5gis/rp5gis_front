@@ -4,41 +4,22 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const ArcGISPlugin = require("@arcgis/webpack-plugin");
+const {WebpackPluginServe} = require('webpack-plugin-serve');
 
-module.exports = (env) => {
+const convert = require('koa-connect');
+const history = require('connect-history-api-fallback');
+const {createProxyMiddleware : proxy} = require('http-proxy-middleware');
+
+
+module.exports = (env, argv) => {
     if (!env) env = {};
-    const PRODUCTION = env.production === undefined ? false : env.production;
-    const SW_ENABLED = env.sw === undefined ? true : env.sw;
+    const PRODUCTION = argv.mode === "production";
 
-    const API_URL = PRODUCTION ? "/api" : "http://192.168.1.25:5181"
-
-    const REPLACEMENTS = [
-        {search: '\\$WEBPACK_API_ADDRESS', replace:API_URL, flags: "g"},
-        {search: '\\$WEBPACK_ENABLE_SW', replace:String(SW_ENABLED), flags: "g"},
-    ];
+    const REPLACEMENTS = {}
 
     return {
         devtool: 'source-map',
         mode: PRODUCTION ? 'production' : 'development',
-        devServer: {
-            host: "0.0.0.0",
-            contentBase: path.join(__dirname),
-            port: 80,
-            historyApiFallback: true,
-            proxy: {
-                '/service': {
-                    target: 'http://rp5gis.myxomopx.ru',
-                    secure: false,
-                    changeOrigin: true,
-                }
-            },
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-                "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
-            }
-        },
         entry: {
             index: './src/index.tsx',
         },
@@ -47,47 +28,15 @@ module.exports = (env) => {
             filename: '[name].js'
         },
         resolve: {
-            extensions: [".ts", ".tsx", ".js", ".scss", ".css"]
-        },
-        node: {
-            process: false,
-            global: false,
-            fs: 'empty',
+            extensions: ['.ts', '.tsx', '.js']
         },
         module: {
             rules: [
-                {
-                    test: /\.js$/,
-                    exclude: /node_modules/,
-                    include: path.resolve(__dirname, "src"),
-                    use: [
-                        "cache-loader",
-                        {
-                            loader: "babel-loader",
-                            options: {
-                                cacheDirectory: true
-                            }
-                        }
-                    ]
-                },
-                {
-                    test: /\.(jpe?g|png|gif|webp)$/,
-                    use: [
-                        "cache-loader",
-                        {
-                            loader: "url-loader",
-                            options: {
-                                // Inline files smaller than 10 kB (10240 bytes)
-                                limit: 10 * 1024,
-                            }
-                        }
-                    ]
-                },
                 // Правило для .ts .tsx
                 {
                     test: /\.tsx?$/,
-                    exclude: ["/node_modules"],
-                    loader: 'awesome-typescript-loader'
+                    loader: 'ts-loader',
+                    exclude: /node_modules/,
                 },
                 // Правило подгрузки sass, scss, css
                 {
@@ -114,23 +63,20 @@ module.exports = (env) => {
                 }
             ]
         },
-        externals: [
-            (context, request, callback) => {
-                if (/pe-wasm$/.test(request)) {
-                    return callback(null, "amd " + request);
-                }
-                callback();
-            }
-        ],
         plugins: [
             new MiniCssExtractPlugin({
                 filename: "style/style-[id].css",
                 chunkFilename: "style/style-[id].css"
             }),
-            new CopyWebpackPlugin([
-                {from: "./src/ui/assets", to: "./assets"},
-                {from: "./node_modules/antd/dist/antd.min.css", to: "./css"}
-            ]),
+            new CopyWebpackPlugin({
+                patterns: [
+                    {
+                        from: "./src/ui/assets/",
+                        to: "./assets"
+                    },
+                    {from: "./node_modules/antd/dist/antd.min.css", to: "./css/antd.min.css"}
+                ]
+            }),
             new HtmlWebpackPlugin({
                 template: "./src/index.html",
                 filename: "index.html",
@@ -141,12 +87,17 @@ module.exports = (env) => {
                     {type: "css", path: "./css/antd.min.css"}
                 ]
             }),
-            new ArcGISPlugin({
-                features: {
-                    "3d": false
-                },
-                locales: ["ru"]
-            })
-        ]
+            new WebpackPluginServe({
+                "port": 80,
+                "host": "0.0.0.0",
+                "historyFallback": true,
+                "static": "dist",
+                middleware: (app, middleware, options) => {
+                    app.use(convert(proxy('/service', { target: 'http://rp5gis.myxomopx.ru', secure: false, changeOrigin: true })));
+                    app.use(convert(history()));
+                }
+            }),
+        ],
+        watch: !PRODUCTION
     };
 };

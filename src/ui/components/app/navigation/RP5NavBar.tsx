@@ -12,7 +12,7 @@ export const RP5NavBar: FC = (props) => {
                 RP5 GIS
             </div>
             <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']} className={"menu"}>
-                <Menu.Item key="1">Главная</Menu.Item>
+                <Menu.Item key="1">Главнаяs</Menu.Item>
             </Menu>
         </Header>
     )
