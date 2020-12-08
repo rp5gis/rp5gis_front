@@ -73,8 +73,7 @@ module.exports = (env, argv) => {
                     {
                         from: "./src/ui/assets/",
                         to: "./assets"
-                    },
-                    {from: "./node_modules/antd/dist/antd.min.css", to: "./css/antd.min.css"}
+                    }
                 ]
             }),
             new HtmlWebpackPlugin({
