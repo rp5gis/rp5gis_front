@@ -4,18 +4,16 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const {WebpackPluginServe} = require('webpack-plugin-serve');
 
-const convert = require('koa-connect');
-const history = require('connect-history-api-fallback');
-const {createProxyMiddleware : proxy} = require('http-proxy-middleware');
-
-
-module.exports = (env, argv) => {
+module.exports = (env) => {
     if (!env) env = {};
-    const PRODUCTION = argv.mode === "production";
+    const PRODUCTION = env.production === undefined ? false : env.production;
+    // const SW_ENABLED = env.sw === undefined ? true : env.sw;
 
-    const REPLACEMENTS = {}
+    const REPLACEMENTS = [
+        // {search: '\\$WEBPACK_API_ADDRESS', replace:API_URL, flags: "g"},
+        // {search: '\\$WEBPACK_ENABLE_SW', replace:String(SW_ENABLED), flags: "g"},
+    ];
 
     return {
         devtool: 'source-map',
@@ -73,7 +71,15 @@ module.exports = (env, argv) => {
                     {
                         from: "./src/ui/assets/",
                         to: "./assets"
-                    }
+                    },
+                    {
+                        from: "./node_modules/bootstrap/dist/css/bootstrap.min.css",
+                        to: "./css/"
+                    },
+                    {
+                        from: "./node_modules/@fortawesome/fontawesome-free/webfonts",
+                        to: "./webfonts"
+                    },
                 ]
             }),
             new HtmlWebpackPlugin({
@@ -82,21 +88,8 @@ module.exports = (env, argv) => {
                 base: "/",
             }),
             new HtmlWebpackTagsPlugin({
-                tags: [
-                    {type: "css", path: "./css/antd.min.css"}
-                ]
-            }),
-            new WebpackPluginServe({
-                "port": 80,
-                "host": "0.0.0.0",
-                "historyFallback": true,
-                "static": "dist",
-                middleware: (app, middleware, options) => {
-                    app.use(convert(proxy('/service', { target: 'http://rp5gis.myxomopx.ru', secure: false, changeOrigin: true })));
-                    app.use(convert(history()));
-                }
-            }),
-        ],
-        watch: !PRODUCTION
+                tags: ['css/bootstrap.min.css', 'css/font-awesome.min.css'], append: true
+            })
+        ]
     };
 };
