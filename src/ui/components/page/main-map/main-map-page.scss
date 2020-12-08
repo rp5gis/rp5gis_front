@@ -1,7 +1,0 @@
-@import "../../app/app";
-
-div .main-map-container {
-  max-height: 100% !important;
-  height: calc(100vh - #{$headerHeight}) !important;
-  overflow: hidden;
-}
