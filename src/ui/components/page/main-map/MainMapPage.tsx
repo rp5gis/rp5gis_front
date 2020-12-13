@@ -1,48 +1,51 @@
 import * as React from "react";
-import {FC, useEffect, useRef} from "react";
-import "./main-map-page.scss"
+import {FC, useEffect, useRef, useState} from "react";
+import "./MainMapPage.scss"
 import {httpClient} from "../../../../api/rest-api";
+import L from 'leaflet'
 
 export const MainMapPage: FC = () => {
-    const mapRef = useRef();
+    const [mapContainer, setMapContainer] = useState<HTMLDivElement>();
+    const [map, setMap] = useState<L.Map>(null);
+
 
     useEffect(() => {
+        if (!mapContainer) return;
+        const map = window["map"] = L.map(mapContainer, {preferCanvas: true}).setView([54.74306, 55.96779], 10);
+        setMap(map);
+        const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-        // Z
+        let citiesLayer = L.layerGroup();
+
+        var baseMaps = {
+            "Streets": streets
+        };
+        var overlayMaps = {
+            "Cities": citiesLayer
+        };
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+
         httpClient.get("citys").then((response) => {
-            // const cities = response.data;
+            //L.geoJSON(response.data).addTo(map)
+            L.marker([51.5, -0.09]).addTo(map)
+            console.log("response",response.data);
+            const cities = response.data;
             // const graphicsLayer = new GraphicsLayer();
             // map.add(graphicsLayer);
-            // cities.forEach((c) => {
-            //     const point = new Point({
-            //         longitude: c.longitude,
-            //         latitude: c.latitude
-            //     })
-            //     const simpleMarkerSymbol = {
-            //         type: "simple-marker",
-            //         color: [226, 119, 40],  // orange
-            //         outline: {
-            //             color: [255, 255, 255], // white
-            //             width: 1
-            //         }
-            //     };
-            //     var pointGraphic = new Graphic({
-            //         geometry: point,
-            //         symbol: simpleMarkerSymbol,
-            //         attributes: {
-            //             name: c.name
-            //         }
-            //     });
-            //     graphicsLayer.add(pointGraphic);
-            // })
+            citiesLayer.clearLayers();
+            cities.forEach((c) => {
+                L.circleMarker([c.latitude, c.longitude], {radius: 5}).addTo(citiesLayer);
+            })
         })
 
         return () => {
         };
-    });
+    }, [mapContainer]);
 
     return (
-        <div className="main-map-container" ref={mapRef}>
+        <div className="main-map-container" ref={setMapContainer}>
         </div>
     )
 }

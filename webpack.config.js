@@ -4,10 +4,15 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const {WebpackPluginServe} = require('webpack-plugin-serve');
 
-module.exports = (env) => {
+const convert = require('koa-connect');
+const history = require('connect-history-api-fallback');
+const {createProxyMiddleware : proxy} = require('http-proxy-middleware');
+
+module.exports = (env, argv) => {
     if (!env) env = {};
-    const PRODUCTION = env.production === undefined ? false : env.production;
+    const PRODUCTION = argv.mode === "production";
     // const SW_ENABLED = env.sw === undefined ? true : env.sw;
 
     const REPLACEMENTS = [
@@ -80,6 +85,14 @@ module.exports = (env) => {
                         from: "./node_modules/@fortawesome/fontawesome-free/webfonts",
                         to: "./webfonts"
                     },
+                    {
+                        from: "./node_modules/leaflet/dist/leaflet.css",
+                        to: "./css/leaflet.css"
+                    },
+                    {
+                        from: "./node_modules/leaflet/dist/images",
+                        to: "./css/images"
+                    },
                 ]
             }),
             new HtmlWebpackPlugin({
@@ -88,8 +101,19 @@ module.exports = (env) => {
                 base: "/",
             }),
             new HtmlWebpackTagsPlugin({
-                tags: ['css/bootstrap.min.css', 'css/font-awesome.min.css'], append: true
+                tags: ['css/bootstrap.min.css', 'css/font-awesome.min.css', 'css/leaflet.css'], append: true
+            }),
+            new WebpackPluginServe({
+                "port": 80,
+                "host": "0.0.0.0",
+                "historyFallback": true,
+                "static": "dist",
+                middleware: (app, middleware, options) => {
+                    app.use(convert(proxy('/service', { target: 'http://rp5gis.myxomopx.ru', secure: false, changeOrigin: true })));
+                    app.use(convert(history()));
+                }
             })
-        ]
+        ],
+        watch: !PRODUCTION
     };
 };
