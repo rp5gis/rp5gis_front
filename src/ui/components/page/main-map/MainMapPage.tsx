@@ -8,7 +8,7 @@ export const MainMapPage: FC = () => {
 
     useEffect(() => {
 
-
+        // Z
         httpClient.get("citys").then((response) => {
             // const cities = response.data;
             // const graphicsLayer = new GraphicsLayer();
